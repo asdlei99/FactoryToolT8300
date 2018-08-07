@@ -1,0 +1,6 @@
+!.gitignore
+*.suo
+*.ncb
+release/
+debug/
+WriteSNT8300.vcproj.*.user

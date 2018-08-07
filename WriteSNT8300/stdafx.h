@@ -4,6 +4,7 @@
 
 #pragma once
 
+#pragma warning(disable:4995)
 #pragma warning(disable:4996)
 
 #ifndef _SECURE_ATL

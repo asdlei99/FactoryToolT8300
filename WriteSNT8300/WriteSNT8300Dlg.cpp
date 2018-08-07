@@ -132,8 +132,10 @@ void CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid()
     int sel = m_comboDriverList.GetCurSel();
     if (sel == -1) {
         AfxMessageBox(TEXT("请选择正确的驱动器盘符！"));
-        return ;
+        return;
     }
+
+    UpdateData(TRUE);
     TCHAR disk[128] = {0};
     char  uuid[512] = {0};
     m_comboDriverList.GetLBText(sel, disk);

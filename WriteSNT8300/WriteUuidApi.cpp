@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <winioctl.h>
 #include <ntddscsi.h>
+#include <strsafe.h>
 
 typedef struct {
     char  cSNSignature[8];
@@ -100,43 +101,51 @@ BOOL IsUsbDisk(TCHAR *disk)
     return bIsUDisk;
 }
 
+static void ErrorExit(LPTSTR lpszFunction)
+{
+    // Retrieve the system error message for the last-error code
+    LPVOID lpMsgBuf;
+    LPVOID lpDisplayBuf;
+    DWORD dw = GetLastError();
+
+    FormatMessage(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        dw,
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (LPTSTR) &lpMsgBuf,
+        0, NULL );
+
+    // Display the error message and exit the process
+    lpDisplayBuf = (LPVOID)LocalAlloc(LMEM_ZEROINIT,
+        (lstrlen((LPCTSTR)lpMsgBuf) + lstrlen((LPCTSTR)lpszFunction) + 40) * sizeof(TCHAR));
+    StringCchPrintf((LPTSTR)lpDisplayBuf,
+        LocalSize(lpDisplayBuf) / sizeof(TCHAR),
+        TEXT("%s failed with error %d: %s"),
+        lpszFunction, dw, lpMsgBuf);
+    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+
+    LocalFree(lpMsgBuf);
+    LocalFree(lpDisplayBuf);
+}
+
 BOOL WriteUUID(TCHAR *disk, char *uuid, int len)
 {
-    TCHAR path[MAX_PATH];
-    SCSI_PASS_THROUGH_DIRECT sptd = {0};
-    CMD_UPDATE_SN            aus  = {0};
+    TCHAR  path  [MAX_PATH];
+    BYTE   buffer[sizeof(SCSI_PASS_THROUGH_DIRECT) + 512] = {0};
+    SCSI_PASS_THROUGH *spt = (SCSI_PASS_THROUGH*)buffer;
+    CMD_UPDATE_SN     *aus = (CMD_UPDATE_SN*)&(buffer[sizeof(SCSI_PASS_THROUGH_DIRECT)]);
     BOOL   bIsUDisk = FALSE;
     BOOL   bResult  = FALSE;
     HANDLE hDevice  = NULL;
     DWORD  nBytes   = 0;
     size_t slen;
 
-    aus.wSNLen = (int)(len < sizeof(aus.bSNData) ? len : sizeof(aus.bSNData));
-    memcpy(aus.cSNSignature, "WR_DEVSN", 8);
-    memcpy(aus.bSNData, uuid, aus.wSNLen);
-
-    sptd.Length             = sizeof(SCSI_PASS_THROUGH_DIRECT);
-    sptd.PathId             = 0;
-    sptd.TargetId           = 1;
-    sptd.Lun                = 0;
-    sptd.SenseInfoLength    = 0;
-    sptd.SenseInfoOffset    = 0;
-
-    sptd.DataIn             = SCSI_IOCTL_DATA_OUT;
-    sptd.TimeOutValue       = 2;
-    sptd.DataTransferLength = 512;
-    sptd.DataBuffer         = &aus;
-    sptd.CdbLength          = 10;
-    sptd.Cdb[0]             = 0x2a;
-    sptd.Cdb[1]             = 0x00;
-    sptd.Cdb[2]             = 0x00;
-    sptd.Cdb[3]             = 0x00;
-    sptd.Cdb[4]             = 0x00;
-    sptd.Cdb[5]             = 0x00;
-    sptd.Cdb[6]             = 0x00;
-    sptd.Cdb[7]             = 0x00;
-    sptd.Cdb[8]             = 0x01;
-    sptd.Cdb[9]             = 0x00;
+    aus->wSNLen = (int)(len < sizeof(aus->bSNData) ? len : sizeof(aus->bSNData));
+    memcpy(aus->cSNSignature, "WR_DEVSN", 8);
+    memcpy(aus->bSNData, uuid, aus->wSNLen);
 
     _tcscpy(path, TEXT("\\\\.\\"));
     _tcscat(path, disk);
@@ -165,7 +174,39 @@ BOOL WriteUUID(TCHAR *disk, char *uuid, int len)
         }
     }
 
-    bResult = DeviceIoControl(hDevice, IOCTL_SCSI_PASS_THROUGH_DIRECT, &sptd, sizeof(sptd), &sptd, sizeof(sptd), &nBytes, (LPOVERLAPPED)NULL);
+    if (0) {
+        spt->Length             = sizeof(SCSI_PASS_THROUGH_DIRECT);
+        spt->PathId             = 0;
+        spt->TargetId           = 0;
+        spt->Lun                = 0;
+        spt->SenseInfoLength    = 0;
+        spt->SenseInfoOffset    = 0;
+        spt->DataIn             = SCSI_IOCTL_DATA_OUT;
+        spt->TimeOutValue       = 10;
+        spt->DataTransferLength = 512;
+        spt->DataBufferOffset   = sizeof(SCSI_PASS_THROUGH_DIRECT);
+        spt->CdbLength          = 10;
+        spt->Cdb[0]             = 0x2a;
+        spt->Cdb[1]             = 0x00;
+        spt->Cdb[2]             = 0x00;
+        spt->Cdb[3]             = 0x00;
+        spt->Cdb[4]             = 0x00;
+        spt->Cdb[5]             = 0x00;
+        spt->Cdb[6]             = 0x00;
+        spt->Cdb[7]             = 0x00;
+        spt->Cdb[8]             = 0x01;
+        spt->Cdb[9]             = 0x00;
+        bResult = DeviceIoControl(hDevice, IOCTL_SCSI_PASS_THROUGH, spt, sizeof(buffer), spt, sizeof(buffer), &nBytes, NULL);
+        if (!bResult) {
+            ErrorExit(TEXT("WriteUUID"));
+        }
+    } else {
+        bResult = WriteFile(hDevice, aus, 512, &nBytes, NULL);
+        if (!bResult) {
+            ErrorExit(TEXT("WriteUUID"));
+        }
+    }
+
     CloseHandle(hDevice);
     return bResult;
 }
