@@ -34,6 +34,7 @@ private:
     CComboBox m_comboDriverList;
     int       m_nSnLen;
     CString   m_strSnStr;
+    CString   m_strSnScan;
     int       m_nAutoInc;
     TCHAR     m_strDriver   [256];
     char      m_strSnLength [128];
@@ -45,4 +46,5 @@ private:
 public:
     afx_msg void OnTimer(UINT_PTR nIDEvent);
     afx_msg void OnDestroy();
+    afx_msg void OnEnChangeEdtUuidScan();
 };

@@ -8,9 +8,10 @@
 #define IDC_EDT_UUID_STR                1002
 #define IDC_EDT_UUID_LEN                1003
 #define IDC_BTN_WRITE_UUID              1004
+#define IDC_EDT_UUID_SCAN               1005
 
 // Next default values for new objects
-//
+// 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        129

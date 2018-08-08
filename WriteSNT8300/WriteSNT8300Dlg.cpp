@@ -122,6 +122,7 @@ CWriteSNT8300Dlg::CWriteSNT8300Dlg(CWnd* pParent /*=NULL*/)
     : CDialog(CWriteSNT8300Dlg::IDD, pParent)
     , m_nSnLen(0)
     , m_strSnStr(_T(""))
+    , m_strSnScan(_T(""))
 {
     m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -131,6 +132,7 @@ void CWriteSNT8300Dlg::DoDataExchange(CDataExchange* pDX)
     CDialog::DoDataExchange(pDX);
     DDX_Text(pDX, IDC_EDT_UUID_LEN, m_nSnLen);
     DDX_Text(pDX, IDC_EDT_UUID_STR, m_strSnStr);
+    DDX_Text(pDX, IDC_EDT_UUID_SCAN, m_strSnScan);
     DDX_Control(pDX, IDC_EDT_DRIVERS, m_comboDriverList);
 }
 
@@ -141,6 +143,7 @@ BEGIN_MESSAGE_MAP(CWriteSNT8300Dlg, CDialog)
     ON_BN_CLICKED(IDC_BTN_WRITE_UUID, &CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid)
     ON_WM_TIMER()
     ON_WM_DESTROY()
+    ON_EN_CHANGE(IDC_EDT_UUID_SCAN, &CWriteSNT8300Dlg::OnEnChangeEdtUuidScan)
 END_MESSAGE_MAP()
 
 
@@ -156,7 +159,7 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
     SetIcon(m_hIcon, FALSE);        // Set small icon
 
     strcpy(m_strSnLength , "16");
-    strcpy(m_strSnAutoInc, "2" );
+    strcpy(m_strSnAutoInc, "0" );
     strcpy(m_strSnStart  , "T8300E0018320001");
     strcpy(m_strSnEnd    , "T8300E001832FFFF");
     strcpy(m_strSnCur    , "T8300E0018320001");
@@ -232,6 +235,7 @@ void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
                 }
             }
         }
+        GetDlgItem(IDC_EDT_UUID_SCAN)->SetFocus();
         break;
     }
     CDialog::OnTimer(nIDEvent);
@@ -273,4 +277,18 @@ BOOL CWriteSNT8300Dlg::PreTranslateMessage(MSG *pMsg)
     return CDialog::PreTranslateMessage(pMsg);
 }
 
+void CWriteSNT8300Dlg::OnEnChangeEdtUuidScan()
+{
+    // TODO:  If this is a RICHEDIT control, the control will not
+    // send this notification unless you override the CDialog::OnInitDialog()
+    // function and call CRichEditCtrl().SetEventMask()
+    // with the ENM_CHANGE flag ORed into the mask.
 
+    // TODO:  Add your control notification handler code here
+    UpdateData(TRUE);
+    if (m_strSnScan.GetLength() >= 16) {
+        m_strSnStr  = m_strSnScan.Trim();
+        m_strSnScan = "";
+        UpdateData(FALSE);
+    }
+}
