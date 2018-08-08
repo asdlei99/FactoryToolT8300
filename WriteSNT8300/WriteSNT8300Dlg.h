@@ -17,7 +17,7 @@ public:
 
 protected:
     virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
-
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 // Implementation
 protected:
@@ -32,9 +32,15 @@ protected:
 
 private:
     CComboBox m_comboDriverList;
-    int       m_nUUIDLen;
-    CString   m_strUUIDStr;
-    TCHAR     m_strDriver[256];
+    int       m_nSnLen;
+    CString   m_strSnStr;
+    int       m_nAutoInc;
+    TCHAR     m_strDriver   [256];
+    char      m_strSnLength [128];
+    char      m_strSnAutoInc[128];
+    char      m_strSnStart  [128];
+    char      m_strSnEnd    [128];
+    char      m_strSnCur    [128];
 
 public:
     afx_msg void OnTimer(UINT_PTR nIDEvent);

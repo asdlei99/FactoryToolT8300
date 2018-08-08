@@ -1,6 +1,7 @@
 !.gitignore
 *.suo
 *.ncb
+*.aps
 release/
 debug/
 WriteSNT8300.vcproj.*.user
