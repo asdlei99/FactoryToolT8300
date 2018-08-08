@@ -11,6 +11,7 @@
 #endif
 
 #define TIMER_SCAN_UDISK   1
+#define TIMER_SET_FOCUS    2
 
 
 static void get_app_dir(char *path, int size)
@@ -169,7 +170,8 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
     m_nSnLen   = atoi(m_strSnLength );
     m_nAutoInc = atoi(m_strSnAutoInc);
     UpdateData(FALSE);
-    SetTimer(TIMER_SCAN_UDISK, 500, NULL);
+    SetTimer(TIMER_SCAN_UDISK, 500 , NULL);
+    SetTimer(TIMER_SET_FOCUS , 5000, NULL);
     return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -179,6 +181,7 @@ void CWriteSNT8300Dlg::OnDestroy()
 
     // TODO: Add your message handler code here
     KillTimer(TIMER_SCAN_UDISK);
+    KillTimer(TIMER_SET_FOCUS );
 }
 
 // If you add a minimize button to your dialog, you will need the code below
@@ -216,10 +219,9 @@ HCURSOR CWriteSNT8300Dlg::OnQueryDragIcon()
 
 void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
 {
-    // TODO: Add your message handler code here and/or call default
+    TCHAR buffer[256] = {0};
     switch (nIDEvent) {
     case TIMER_SCAN_UDISK:
-        TCHAR buffer[256] = {0};
         GetLogicalDriveStrings(sizeof(buffer), buffer);
         if (memcmp(m_strDriver, buffer, sizeof(buffer)) != 0) {
             memcpy(m_strDriver, buffer, sizeof(buffer));
@@ -235,6 +237,8 @@ void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
                 }
             }
         }
+        break;
+    case TIMER_SET_FOCUS:
         GetDlgItem(IDC_EDT_UUID_SCAN)->SetFocus();
         break;
     }
@@ -271,7 +275,7 @@ BOOL CWriteSNT8300Dlg::PreTranslateMessage(MSG *pMsg)
 {
     if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_KEYUP) {
         switch (pMsg->wParam) {
-        case VK_SPACE: OnBnClickedBtnWriteUuid(); return TRUE;
+        case VK_SPACE: if (pMsg->message == WM_KEYDOWN) OnBnClickedBtnWriteUuid(); return TRUE;
         }
     }
     return CDialog::PreTranslateMessage(pMsg);
