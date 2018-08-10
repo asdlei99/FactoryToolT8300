@@ -84,10 +84,9 @@ static void sn_auto_inc(char *start, char *end, char *cur, int len, int inc)
 {
     char  file[MAX_PATH];
     FILE *fp = NULL;
-    int   c = 1;
+    int   c = inc ? 1 : 0;
     int   i;
 
-    if (!inc) return;
     for (i=len-1; i>=0; i--) {
         if (c) cur[i]++;
         else break;
@@ -114,6 +113,19 @@ static void sn_auto_inc(char *start, char *end, char *cur, int len, int inc)
         fprintf(fp, "sn_start = %s\r\n", start);
         fprintf(fp, "sn_end   = %s\r\n", end  );
         fprintf(fp, "sn_cur   = %s\r\n", cur  );
+        fclose(fp);
+    }
+}
+
+static void sn_save_burned(char *burned)
+{
+    char  file[MAX_PATH];
+    FILE *fp = NULL;
+    get_app_dir(file, MAX_PATH);
+    strcat(file, "\\ÒÑÉÕÐ´µÄÐòÁÐºÅ.txt");
+    fp = fopen(file, "ab");
+    if (fp) {
+        fprintf(fp, "%s\r\n", burned);
         fclose(fp);
     }
 }
@@ -164,7 +176,9 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
     strcpy(m_strSnStart  , "T8300E0018320001");
     strcpy(m_strSnEnd    , "T8300E001832FFFF");
     strcpy(m_strSnCur    , "T8300E0018320001");
-    load_config_from_file(m_strSnLength, m_strSnAutoInc, m_strSnStart, m_strSnEnd, m_strSnCur);
+    if (load_config_from_file(m_strSnLength, m_strSnAutoInc, m_strSnStart, m_strSnEnd, m_strSnCur) < 0) {
+        sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, atoi(m_strSnLength), atoi(m_strSnAutoInc));
+    }
 
     m_strSnStr = m_strSnCur;
     m_nSnLen   = atoi(m_strSnLength );
@@ -263,8 +277,9 @@ void CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid()
     }
 
     BOOL ret = WriteUUID(disk, m_strSnCur, m_nSnLen);
-    AfxMessageBox(ret ? TEXT("ÉÕÐ´³É¹¦£¡") : TEXT("ÉÕÐ´Ê§°Ü£¡"));
+    AfxMessageBox(ret ? TEXT("ÉÕÐ´³É¹¦£¡\r\n£»-£©") : TEXT("ÉÕÐ´Ê§°Ü£¡\r\nÇë¼ì²éÉè±¸×´Ì¬ºÍ USB Á¬½Ó×´Ì¬£¡"));
     if (ret) {
+        sn_save_burned(m_strSnCur);
         sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, m_nSnLen, m_nAutoInc);
         m_strSnStr = m_strSnCur;
         UpdateData(FALSE);
@@ -276,6 +291,7 @@ BOOL CWriteSNT8300Dlg::PreTranslateMessage(MSG *pMsg)
     if (pMsg->message == WM_KEYDOWN || pMsg->message == WM_KEYUP) {
         switch (pMsg->wParam) {
         case VK_SPACE: if (pMsg->message == WM_KEYDOWN) OnBnClickedBtnWriteUuid(); return TRUE;
+        case VK_RETURN: return TRUE;
         }
     }
     return CDialog::PreTranslateMessage(pMsg);
