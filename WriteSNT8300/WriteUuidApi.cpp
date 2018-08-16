@@ -101,7 +101,7 @@ BOOL IsUsbDisk(TCHAR *disk)
     return bIsUDisk;
 }
 
-static void ErrorExit(LPTSTR lpszFunction)
+static void ErrorExit(LPTSTR lpszFunction, HWND hwnd)
 {
     // Retrieve the system error message for the last-error code
     LPVOID lpMsgBuf;
@@ -125,13 +125,13 @@ static void ErrorExit(LPTSTR lpszFunction)
         LocalSize(lpDisplayBuf) / sizeof(TCHAR),
         TEXT("%s failed with error %d: %s"),
         lpszFunction, dw, lpMsgBuf);
-    MessageBox(NULL, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
+    MessageBox(hwnd, (LPCTSTR)lpDisplayBuf, TEXT("Error"), MB_OK);
 
     LocalFree(lpMsgBuf);
     LocalFree(lpDisplayBuf);
 }
 
-BOOL WriteUUID(TCHAR *disk, char *uuid, int len)
+BOOL WriteUUID(TCHAR *disk, char *uuid, int len, HWND hwnd)
 {
     TCHAR  path  [MAX_PATH];
     BYTE   buffer[sizeof(SCSI_PASS_THROUGH_DIRECT) + 512] = {0};
@@ -198,12 +198,12 @@ BOOL WriteUUID(TCHAR *disk, char *uuid, int len)
         spt->Cdb[9]             = 0x00;
         bResult = DeviceIoControl(hDevice, IOCTL_SCSI_PASS_THROUGH, spt, sizeof(buffer), spt, sizeof(buffer), &nBytes, NULL);
         if (!bResult) {
-            ErrorExit(TEXT("WriteUUID"));
+            ErrorExit(TEXT("WriteUUID"), hwnd);
         }
     } else {
         bResult = WriteFile(hDevice, aus, 512, &nBytes, NULL);
         if (!bResult) {
-            ErrorExit(TEXT("WriteUUID"));
+            ErrorExit(TEXT("WriteUUID"), hwnd);
         }
     }
 

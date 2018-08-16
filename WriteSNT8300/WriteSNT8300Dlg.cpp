@@ -295,7 +295,7 @@ void CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid()
         return;
     }
 
-    m_nResult = WriteUUID(disk, m_strSnCur, m_nSnLen) ? 1 : 0;
+    m_nResult = WriteUUID(disk, m_strSnCur, m_nSnLen, GetSafeHwnd()) ? 1 : 0;
     m_strWriteSnResult = (m_nResult == 1) ? TEXT("          烧写成功！；-）") : TEXT("烧写失败！\r\n请检查设备状态和 USB 连接状态！");
     if (m_nResult == 1) {
         sn_save_burned(m_strSnCur);
