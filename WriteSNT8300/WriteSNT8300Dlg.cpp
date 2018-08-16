@@ -12,6 +12,7 @@
 
 #define TIMER_SCAN_UDISK   1
 #define TIMER_SET_FOCUS    2
+#define TIMER_WRITE_UUID   3
 
 
 static void get_app_dir(char *path, int size)
@@ -136,6 +137,10 @@ CWriteSNT8300Dlg::CWriteSNT8300Dlg(CWnd* pParent /*=NULL*/)
     , m_nSnLen(0)
     , m_strSnStr(_T(""))
     , m_strSnScan(_T(""))
+    , m_bDevFound(FALSE)
+    , m_bScaned(FALSE)
+    , m_nResult(2)
+    , m_strWriteSnResult(_T(""))
 {
     m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -147,6 +152,7 @@ void CWriteSNT8300Dlg::DoDataExchange(CDataExchange* pDX)
     DDX_Text(pDX, IDC_EDT_UUID_STR, m_strSnStr);
     DDX_Text(pDX, IDC_EDT_UUID_SCAN, m_strSnScan);
     DDX_Control(pDX, IDC_EDT_DRIVERS, m_comboDriverList);
+    DDX_Text(pDX, IDC_TXT_RESULT, m_strWriteSnResult);
 }
 
 BEGIN_MESSAGE_MAP(CWriteSNT8300Dlg, CDialog)
@@ -154,9 +160,10 @@ BEGIN_MESSAGE_MAP(CWriteSNT8300Dlg, CDialog)
     ON_WM_QUERYDRAGICON()
     //}}AFX_MSG_MAP
     ON_BN_CLICKED(IDC_BTN_WRITE_UUID, &CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid)
+    ON_EN_CHANGE(IDC_EDT_UUID_SCAN, &CWriteSNT8300Dlg::OnEnChangeEdtUuidScan)
     ON_WM_TIMER()
     ON_WM_DESTROY()
-    ON_EN_CHANGE(IDC_EDT_UUID_SCAN, &CWriteSNT8300Dlg::OnEnChangeEdtUuidScan)
+    ON_WM_CTLCOLOR()
 END_MESSAGE_MAP()
 
 
@@ -171,10 +178,14 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
     SetIcon(m_hIcon, TRUE);         // Set big icon
     SetIcon(m_hIcon, FALSE);        // Set small icon
 
+    m_fntResult.CreatePointFont(150, TEXT("黑体"), NULL);
+    GetDlgItem(IDC_TXT_RESULT)->SetFont(&m_fntResult);
+    m_strWriteSnResult = TEXT("      序列号烧录工具 v1.0.0");
+
     strcpy(m_strSnLength , "16");
     strcpy(m_strSnAutoInc, "0" );
     strcpy(m_strSnStart  , "T8300E0018320001");
-    strcpy(m_strSnEnd    , "T8300E001832FFFF");
+    strcpy(m_strSnEnd    , "T8300FFFFFFFFFFF");
     strcpy(m_strSnCur    , "T8300E0018320001");
     if (load_config_from_file(m_strSnLength, m_strSnAutoInc, m_strSnStart, m_strSnEnd, m_strSnCur) < 0) {
         sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, atoi(m_strSnLength), atoi(m_strSnAutoInc));
@@ -240,20 +251,28 @@ void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
         if (memcmp(m_strDriver, buffer, sizeof(buffer)) != 0) {
             memcpy(m_strDriver, buffer, sizeof(buffer));
             m_comboDriverList.ResetContent();
-            for (int i=0; i<sizeof(buffer); i+=4) {
-                if (buffer[i]) {
-                    m_comboDriverList.AddString(&buffer[i]);
-                    if (IsUsbDisk(&buffer[i])) {
-                        m_comboDriverList.SelectString(0, &buffer[i]);
-                    }
-                } else {
-                    break;
+            m_bDevFound = FALSE;
+            for (int i=0; i<sizeof(buffer) && buffer[i]; i+=4) {
+                m_comboDriverList.AddString(&buffer[i]);
+                if (IsUsbDisk(&buffer[i])) {
+                    m_comboDriverList.SelectString(0, &buffer[i]);
+                    m_bDevFound = TRUE;
                 }
+            }
+            if (m_bDevFound && m_bScaned) {
+                SetTimer(TIMER_WRITE_UUID, 100, NULL);
+            } else {
+                m_nResult = 2;
+                m_strWriteSnResult = TEXT("请扫码条码...");
             }
         }
         break;
     case TIMER_SET_FOCUS:
         GetDlgItem(IDC_EDT_UUID_SCAN)->SetFocus();
+        break;
+    case TIMER_WRITE_UUID:
+        KillTimer(TIMER_WRITE_UUID);
+        OnBnClickedBtnWriteUuid();
         break;
     }
     CDialog::OnTimer(nIDEvent);
@@ -276,14 +295,15 @@ void CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid()
         return;
     }
 
-    BOOL ret = WriteUUID(disk, m_strSnCur, m_nSnLen);
-    AfxMessageBox(ret ? TEXT("烧写成功！\r\n；-）") : TEXT("烧写失败！\r\n请检查设备状态和 USB 连接状态！"));
-    if (ret) {
+    m_nResult = WriteUUID(disk, m_strSnCur, m_nSnLen) ? 1 : 0;
+    m_strWriteSnResult = (m_nResult == 1) ? TEXT("          烧写成功！；-）") : TEXT("烧写失败！\r\n请检查设备状态和 USB 连接状态！");
+    if (m_nResult == 1) {
         sn_save_burned(m_strSnCur);
         sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, m_nSnLen, m_nAutoInc);
         m_strSnStr = m_strSnCur;
-        UpdateData(FALSE);
+        m_bScaned  = FALSE;
     }
+    UpdateData(FALSE);
 }
 
 BOOL CWriteSNT8300Dlg::PreTranslateMessage(MSG *pMsg)
@@ -306,9 +326,31 @@ void CWriteSNT8300Dlg::OnEnChangeEdtUuidScan()
 
     // TODO:  Add your control notification handler code here
     UpdateData(TRUE);
-    if (m_strSnScan.GetLength() >= 16) {
+    if (m_strSnScan.GetLength() >= m_nSnLen) {
         m_strSnStr  = m_strSnScan.Trim();
         m_strSnScan = "";
+        m_bScaned   = TRUE;
+        if (m_bDevFound && m_bScaned) {
+            SetTimer(TIMER_WRITE_UUID, 100, NULL);
+        } else {
+            m_nResult = 2;
+            m_strWriteSnResult = TEXT("          请连接设备...");
+        }
         UpdateData(FALSE);
     }
+}
+
+HBRUSH CWriteSNT8300Dlg::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
+{
+    HBRUSH hbr = CDialog::OnCtlColor(pDC, pWnd, nCtlColor);
+    switch (pWnd->GetDlgCtrlID()) {
+    case IDC_TXT_RESULT:
+        switch (m_nResult) {
+        case 0: pDC->SetTextColor(RGB(255, 0, 0)); break;
+        case 1: pDC->SetTextColor(RGB(0, 155, 0)); break;
+        case 2: pDC->SetTextColor(RGB(0,   0, 0)); break;
+        }
+        break;
+    }
+    return hbr;
 }
