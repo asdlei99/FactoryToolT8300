@@ -180,7 +180,7 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
 
     m_fntResult.CreatePointFont(150, TEXT("黑体"), NULL);
     GetDlgItem(IDC_TXT_RESULT)->SetFont(&m_fntResult);
-    m_strWriteSnResult = TEXT("      序列号烧录工具 v1.0.0");
+    m_strWriteSnResult = TEXT("      序列号烧写工具 v1.0.0");
 
     strcpy(m_strSnLength , "16");
     strcpy(m_strSnAutoInc, "0" );
