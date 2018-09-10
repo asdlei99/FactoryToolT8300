@@ -5,3 +5,4 @@
 release/
 debug/
 WriteSNT8300.vcproj.*.user
+SerialCmdTool.vcproj.*.user

@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WriteSNT8300", "WriteSNT8300\WriteSNT8300.vcproj", "{4FE5C9C0-790C-43A2-8593-1D1765766330}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SerialCmdTool", "SerialCmdTool\SerialCmdTool.vcproj", "{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +15,10 @@ Global
 		{4FE5C9C0-790C-43A2-8593-1D1765766330}.Debug|Win32.Build.0 = Debug|Win32
 		{4FE5C9C0-790C-43A2-8593-1D1765766330}.Release|Win32.ActiveCfg = Release|Win32
 		{4FE5C9C0-790C-43A2-8593-1D1765766330}.Release|Win32.Build.0 = Release|Win32
+		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Debug|Win32.Build.0 = Debug|Win32
+		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Release|Win32.ActiveCfg = Release|Win32
+		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
