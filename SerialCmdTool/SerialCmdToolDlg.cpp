@@ -52,7 +52,7 @@ static DWORD WINAPI SerialPortTxThread(LPVOID params)
 //      OutputDebugString(str);
         dlg->m_strTxStatus = str;
         dlg->PostMessage(WM_UPDATE_TX_UI);
-        if (0) {
+        if (1) {
             int   len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
             char *buf = (char*)malloc(len + 1);
             DWORD written = 0;
