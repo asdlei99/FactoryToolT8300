@@ -17,8 +17,8 @@ static DWORD WINAPI SerialPortRxThread(LPVOID params)
     OVERLAPPED      osRead = {0};
 
     while (!(dlg->m_nCOMExit & RX_EXIT)) {
-        char  buf[256];
-        DWORD readn = 0;
+        char  buf[256] = "";
+        DWORD readn    = 0;
         if (!ReadFile(dlg->m_hCOM, buf, sizeof(buf)-1, &readn, &osRead)) {
             if (GetLastError() == ERROR_IO_PENDING) {
                 GetOverlappedResult(dlg->m_hCOM, &osRead, &readn, TRUE);
@@ -53,11 +53,21 @@ static DWORD WINAPI SerialPortTxThread(LPVOID params)
         dlg->m_strTxStatus = str;
         dlg->PostMessage(WM_UPDATE_TX_UI);
         if (1) {
-            int   len = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
-            char *buf = (char*)malloc(len + 1);
+            int   size = WideCharToMultiByte(CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+            char *buf  = (char*)malloc(size);
             DWORD written = 0;
             if (buf) {
-                WideCharToMultiByte(CP_ACP, 0, str, -1, buf, len, NULL, NULL);
+                WideCharToMultiByte(CP_ACP, 0, str, -1, buf, size, NULL, NULL);
+                int len = (int)strlen(buf);
+#if 1
+                while (len > 0) {
+                    if (buf[len-1] == '\r' || buf[len-1] == '\n') len--;
+                    else break;
+                }
+                if (len < size) {
+                    buf[len++] = 1 ? '\r' : '\n';
+                }
+#endif
                 if (!WriteFile(dlg->m_hCOM, buf, len, &written, &osWrite)) {
                     if (GetLastError() == ERROR_IO_PENDING) {
                         GetOverlappedResult(dlg->m_hCOM, &osWrite, &written, TRUE);
