@@ -48,6 +48,7 @@ private:
     char      m_strSnStart  [128];
     char      m_strSnEnd    [128];
     char      m_strSnCur    [128];
+    char      m_strSnCheck  [128];
     BOOL      m_bDevFound;
     BOOL      m_bScaned;
     BOOL      m_nResult;

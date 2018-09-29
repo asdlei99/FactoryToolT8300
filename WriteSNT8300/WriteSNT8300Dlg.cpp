@@ -48,7 +48,7 @@ static void parse_params(const char *str, const char *key, char *val)
     }
 }
 
-static int load_config_from_file(char *snlen, char *autoinc, char *start, char *end, char *cur)
+static int load_config_from_file(char *snlen, char *autoinc, char *start, char *end, char *cur, char *check)
 {
     char  file[MAX_PATH];
     FILE *fp = NULL;
@@ -72,6 +72,7 @@ static int load_config_from_file(char *snlen, char *autoinc, char *start, char *
             parse_params(buf, "sn_start", start  );
             parse_params(buf, "sn_end"  , end    );
             parse_params(buf, "sn_cur"  , cur    );
+            parse_params(buf, "sn_check", check  );
             free(buf);
         }
         fclose(fp);
@@ -81,7 +82,7 @@ static int load_config_from_file(char *snlen, char *autoinc, char *start, char *
     return -1;
 }
 
-static void sn_auto_inc(char *start, char *end, char *cur, int len, int inc)
+static void sn_auto_inc(char *start, char *end, char *cur, char *check, int len, int inc)
 {
     char  file[MAX_PATH];
     FILE *fp = NULL;
@@ -114,6 +115,7 @@ static void sn_auto_inc(char *start, char *end, char *cur, int len, int inc)
         fprintf(fp, "sn_start = %s\r\n", start);
         fprintf(fp, "sn_end   = %s\r\n", end  );
         fprintf(fp, "sn_cur   = %s\r\n", cur  );
+        fprintf(fp, "sn_check = %s\r\n", check);
         fclose(fp);
     }
 }
@@ -180,15 +182,16 @@ BOOL CWriteSNT8300Dlg::OnInitDialog()
 
     m_fntResult.CreatePointFont(150, TEXT("黑体"), NULL);
     GetDlgItem(IDC_TXT_RESULT)->SetFont(&m_fntResult);
-    m_strWriteSnResult = TEXT("      序列号烧写工具 v1.0.0");
+    m_strWriteSnResult = TEXT("      序列号烧写工具 v1.0.1");
 
     strcpy(m_strSnLength , "16");
     strcpy(m_strSnAutoInc, "0" );
     strcpy(m_strSnStart  , "T8300E0018320001");
     strcpy(m_strSnEnd    , "T8300FFFFFFFFFFF");
     strcpy(m_strSnCur    , "T8300E0018320001");
-    if (load_config_from_file(m_strSnLength, m_strSnAutoInc, m_strSnStart, m_strSnEnd, m_strSnCur) < 0) {
-        sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, atoi(m_strSnLength), atoi(m_strSnAutoInc));
+    strcpy(m_strSnCheck  , "T8300");
+    if (load_config_from_file(m_strSnLength, m_strSnAutoInc, m_strSnStart, m_strSnEnd, m_strSnCur, m_strSnCheck) < 0) {
+        sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, m_strSnCheck, atoi(m_strSnLength), atoi(m_strSnAutoInc));
     }
 
     m_strSnStr = m_strSnCur;
@@ -299,7 +302,7 @@ void CWriteSNT8300Dlg::OnBnClickedBtnWriteUuid()
     m_strWriteSnResult = (m_nResult == 1) ? TEXT("          烧写成功！；-）") : TEXT("烧写失败！\r\n请检查设备状态和 USB 连接状态！");
     if (m_nResult == 1) {
         sn_save_burned(m_strSnCur);
-        sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, m_nSnLen, m_nAutoInc);
+        sn_auto_inc(m_strSnStart, m_strSnEnd, m_strSnCur, m_strSnCheck, m_nSnLen, m_nAutoInc);
         m_strSnStr = m_strSnCur;
         m_bScaned  = FALSE;
     }
@@ -328,7 +331,17 @@ void CWriteSNT8300Dlg::OnEnChangeEdtUuidScan()
     UpdateData(TRUE);
     if (m_strSnScan.GetLength() >= m_nSnLen) {
         m_strSnStr  = m_strSnScan.Trim();
+        m_strSnStr  = m_strSnScan.Left(m_nSnLen);
         m_strSnScan = "";
+
+        if (strlen(m_strSnCheck) > 0) {
+            if (m_strSnStr.Find(CString(m_strSnCheck)) != 0) {
+                AfxMessageBox(TEXT("序列号格式错误！\r\n请重新扫码！"));
+                UpdateData(FALSE);
+                return;
+            }
+        }
+
         m_bScaned   = TRUE;
         if (m_bDevFound && m_bScaned) {
             SetTimer(TIMER_WRITE_UUID, 100, NULL);
