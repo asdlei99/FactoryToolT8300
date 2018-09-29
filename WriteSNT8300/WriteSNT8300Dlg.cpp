@@ -266,7 +266,8 @@ void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
                 SetTimer(TIMER_WRITE_UUID, 100, NULL);
             } else {
                 m_nResult = 2;
-                m_strWriteSnResult = TEXT("ÇëÉ¨ÂëÌõÂë...");
+                m_strWriteSnResult = TEXT("ÇëÉ¨ÃèÌõÂë...");
+                UpdateData(FALSE);
             }
         }
         break;
