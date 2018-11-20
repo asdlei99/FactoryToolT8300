@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WriteSNT8300", "WriteSNT830
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SerialCmdTool", "SerialCmdTool\SerialCmdTool.vcproj", "{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FlashTool", "FlashTool\FlashTool.vcproj", "{2EC1DA07-2683-465A-89B7-4609E6AACD8A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Debug|Win32.Build.0 = Debug|Win32
 		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Release|Win32.ActiveCfg = Release|Win32
 		{D7515C9D-5CCA-4EAF-B44E-04476FE8D12F}.Release|Win32.Build.0 = Release|Win32
+		{2EC1DA07-2683-465A-89B7-4609E6AACD8A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2EC1DA07-2683-465A-89B7-4609E6AACD8A}.Debug|Win32.Build.0 = Debug|Win32
+		{2EC1DA07-2683-465A-89B7-4609E6AACD8A}.Release|Win32.ActiveCfg = Release|Win32
+		{2EC1DA07-2683-465A-89B7-4609E6AACD8A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
