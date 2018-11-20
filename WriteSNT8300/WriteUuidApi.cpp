@@ -70,7 +70,7 @@ typedef struct {
 
 #define IOCTL_STORAGE_QUERY_PROPERTY CTL_CODE(IOCTL_STORAGE_BASE, 0x0500, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-BOOL IsUsbDisk(TCHAR *disk)
+BOOL IsT8300UsbDisk(TCHAR *disk)
 {
     HANDLE hDisk            = NULL;
     TCHAR  path[MAX_PATH]   = {0};
@@ -98,7 +98,22 @@ BOOL IsUsbDisk(TCHAR *disk)
     bResult  = DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(STORAGE_PROPERTY_QUERY), pdesc, pdesc->Size, &nBytes, (LPOVERLAPPED)NULL);
     bIsUDisk = bResult && pdesc->BusType == BusTypeUsb && pdesc->RemovableMedia;
     CloseHandle(hDisk);
-    return bIsUDisk;
+    if (!bIsUDisk) return FALSE;
+
+    TCHAR volname [256];
+    TCHAR fsname  [256];
+    DWORD serialnum = 0;
+    DWORD fsflags   = 0;
+    DWORD maxlen    = 0;
+    BOOL  ret;
+    ret = GetVolumeInformation(disk, volname, 256, &serialnum, &maxlen, &fsflags, fsname, 256);
+    if (!ret) return FALSE;
+
+    if (_tcsncmp(volname, TEXT("SN93700"), 7) == 0 && _tcscmp(fsname, TEXT("FAT")) == 0) {
+        return TRUE;
+    } else {
+        return FALSE;
+    }
 }
 
 static void ErrorExit(LPTSTR lpszFunction, HWND hwnd)

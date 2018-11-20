@@ -257,7 +257,7 @@ void CWriteSNT8300Dlg::OnTimer(UINT_PTR nIDEvent)
             m_bDevFound = FALSE;
             for (int i=0; i<sizeof(buffer) && buffer[i]; i+=4) {
                 m_comboDriverList.AddString(&buffer[i]);
-                if (IsUsbDisk(&buffer[i])) {
+                if (IsT8300UsbDisk(&buffer[i])) {
                     m_comboDriverList.SelectString(0, &buffer[i]);
                     m_bDevFound = TRUE;
                 }
