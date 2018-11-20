@@ -150,7 +150,7 @@ BOOL WriteUUID(TCHAR *disk, char *uuid, int len, HWND hwnd)
     _tcscpy(path, TEXT("\\\\.\\"));
     _tcscat(path, disk);
     slen = _tcslen(path);
-    if (len > 0 && path[slen - 1] == TEXT('\\')) path[slen - 1] = TEXT('\0');
+    if (slen > 0 && path[slen - 1] == TEXT('\\')) path[slen - 1] = TEXT('\0');
 
     hDevice = CreateFile(path, GENERIC_WRITE|GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE) {
