@@ -234,7 +234,7 @@ void CSerialCmdToolDlg::OnBnClickedBtnOpenCloseCom()
         TCHAR name[MAX_PATH];
         int sel = m_ctlComPort.GetCurSel();
         if (sel == -1) {
-            AfxMessageBox(TEXT("请选择正确的驱动器盘符！"));
+            AfxMessageBox(TEXT("请选择正确的 COM 口！"));
             return;
         }
         m_ctlComPort.GetLBText(sel, name);
